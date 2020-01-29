@@ -3,9 +3,24 @@ import json
 import time
 import requests
 
+import logging
+import logging.handlers
+
 from app import app
 from flask import request, Response
 from utils import cache_data_save, r, headers
+
+
+logger = logging.getLogger('cache-logger')
+logger.setLevel(logging.INFO)
+#add handler to the logger
+handler = logging.handlers.SysLogHandler('/dev/log')
+
+#add syslog format to the handler
+formatter = logging.Formatter('Python: { "loggerName":"%(name)s", "timestamp":"%(asctime)s", "pathName":"%(pathname)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s"}')
+
+handler.formatter = formatter
+logger.addHandler(handler)
 
 
 # data_object_example = {
@@ -35,6 +50,11 @@ def cache_valid_check(key, etag):
 
 def api_request(key):
     resp = requests.get('https://hive.one/' + key, headers=headers)
+
+    logger.info({
+        'request_url': resp.url,
+        'status_code': resp.status_code
+    })
 
     return resp
 
