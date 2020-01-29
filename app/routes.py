@@ -90,10 +90,15 @@ def retrieve_data_from_hive(key):
 
 
 def fulfil_request(url):
-    if cache_data_exists(url):
-        return cache_data_retrieve(url)
-    else:
-        return retrieve_data_from_hive(url)
+    try:
+        if cache_data_exists(url):
+            return cache_data_retrieve(url)
+        else:
+            return retrieve_data_from_hive(url)
+    except Exception as error:
+        logger.info({
+            'error': str(error),
+        })
 
 
 @app.route('/api/v1/influencers/')
