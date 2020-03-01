@@ -2,6 +2,7 @@ import redis
 import json
 import time
 import requests
+import copy
 
 import logging
 import logging.handlers
@@ -23,29 +24,36 @@ handler.formatter = formatter
 logger.addHandler(handler)
 
 
-# data_object_example = {
-#     'ETag': '',
-#     'cached_on': 'datetime',
-#     'data': {}
-# }
-
-
 def cache_data_exists(key):
     return r.exists(key) == 1
 
 
 def cache_data_retrieve(key):
     data = json.loads(r.get(key))
-    if int(time.time()) - data["cached_on"] <= 86400:
-        print('Returning Cached Data')
-        return data['data']
-    else:
+
+    def fetch_live_data():
         print('Cache is invalid')
         return retrieve_data_from_hive(key)
 
+    if int(time.time()) - data["cached_on"] <= 86400:
+        if 'ETag' in data:
+            if cache_valid_check(key, data['ETag']):
+                print('Returning Cached Data')
+                return data['data']
+            else:
+                return fetch_live_data()
+        else:
+            return fetch_live_data()
+    else:
+        return fetch_live_data()
+
 
 def cache_valid_check(key, etag):
-    pass
+    etag_headers = copy.deepcopy(headers)
+    etag_headers['If-None-Match'] = etag
+    resp = requests.get('https://hive.one/' + key, headers=etag_headers)
+
+    return resp.status_code == 304
 
 
 def api_request(key):
@@ -66,7 +74,8 @@ def retrieve_data_from_hive(key):
         data = resp.json()
         cache_data = {
             "cached_on": int(time.time()),
-            "data": data
+            "data": data,
+            "ETag": resp.headers['ETag']    
         }
         cache_data_save(key, cache_data)
         print('returning data from hive')
@@ -78,7 +87,8 @@ def retrieve_data_from_hive(key):
             data = resp.json()
             cache_data = {
                 "cached_on": int(time.time()),
-                "data": data
+                "data": data,
+                "ETag": resp.headers['ETag']
             }
             cache_data_save(key, cache_data)
             print('returning data from hive')
