@@ -39,7 +39,7 @@ def cache_data_retrieve(key):
         if 'ETag' in data:
             if cache_valid_check(key, data['ETag']):
                 print('Returning Cached Data')
-                return data['data']
+                return data
             else:
                 return fetch_live_data()
         else:
@@ -79,7 +79,7 @@ def retrieve_data_from_hive(key):
         }
         cache_data_save(key, cache_data)
         print('returning data from hive')
-        return data
+        return cache_data
     elif resp.status_code == 420:
         time.sleep(2)
         resp = api_request(key)
@@ -92,7 +92,7 @@ def retrieve_data_from_hive(key):
             }
             cache_data_save(key, cache_data)
             print('returning data from hive')
-            return data
+            return cache_data
         else:
             return Response(json.dumps({'error': 'Too Many Requests'}), status=420, mimetype='application/json')
     else:
@@ -102,9 +102,11 @@ def retrieve_data_from_hive(key):
 def fulfil_request(url):
     try:
         if cache_data_exists(url):
-            return cache_data_retrieve(url)
+            resp = cache_data_retrieve(url)
         else:
-            return retrieve_data_from_hive(url)
+            resp = retrieve_data_from_hive(url)
+        
+        return Response(json.dumps(resp['data']), headers={'ETag': resp['ETag']})
     except Exception as error:
         logger.info({
             'error': str(error),
