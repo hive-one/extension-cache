@@ -113,19 +113,8 @@ def fulfil_request(url):
         })
 
 
-@app.route('/api/v1/influencers/')
-def available():
-    cache_key = request.full_path
-    return fulfil_request(cache_key)
-
-
-@app.route('/api/v1/influencers/screen_name/<screen_name>/')
-def details(screen_name):
-    cache_key = request.full_path
-    return fulfil_request(cache_key)
-
-
-@app.route('/api/v1/influencers/screen_name/<screen_name>/podcasts/')
-def podcasts(screen_name):
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def available(path):
     cache_key = request.full_path
     return fulfil_request(cache_key)
