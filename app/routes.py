@@ -110,7 +110,7 @@ def fulfil_request(url, etag = None):
         else:
             resp = retrieve_data_from_hive(url)
         
-        return Response(json.dumps(resp['data']), headers={'ETag': resp['ETag']})
+        return Response(json.dumps(resp['data']), headers={'ETag': resp['ETag']}, mimetype='application/json')
     except Exception as error:
         logger.info({
             'error': str(error),
