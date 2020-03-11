@@ -99,7 +99,11 @@ def retrieve_data_from_hive(key):
         return Response(json.dumps({'error': 'Too Many Requests'}), status=420, mimetype='application/json')
 
 
-def fulfil_request(url):
+def fulfil_request(url, etag = None):
+    if etag and cache_data_exists(url):
+        data = json.loads(r.get(url))
+        if data['ETag'] == etag:
+            return Response('', status=304)
     try:
         if cache_data_exists(url):
             resp = cache_data_retrieve(url)
@@ -117,4 +121,7 @@ def fulfil_request(url):
 @app.route('/<path:path>')
 def available(path):
     cache_key = request.full_path
-    return fulfil_request(cache_key)
+    etag = None
+    if "If-None-Match" in request.headers:
+        etag = request.headers['If-None-Match']
+    return fulfil_request(cache_key, etag)
