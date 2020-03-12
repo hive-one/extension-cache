@@ -1,0 +1,26 @@
+name: Deploy
+on: [push]
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Copy app to server
+      uses: appleboy/scp-action@master
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+        KEY: ${{ secrets.KEY }}
+      with:
+        source: "./"
+        target: "extension-cache"
+    - name: Restart Server
+      uses: appleboy/ssh-action@master
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+        KEY: ${{ secrets.KEY }}
+      with:
+        script: sudo systemctl restart gunicorn
