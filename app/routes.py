@@ -51,13 +51,13 @@ def cache_data_retrieve(key):
 def cache_valid_check(key, etag):
     etag_headers = copy.deepcopy(headers)
     etag_headers['If-None-Match'] = etag
-    resp = requests.get('https://hive.one/' + key, headers=etag_headers)
+    resp = requests.get('https://api.hive.one/' + key, headers=etag_headers)
 
     return resp.status_code == 304
 
 
 def api_request(key):
-    resp = requests.get('https://hive.one/' + key, headers=headers)
+    resp = requests.get('https://api.hive.one/' + key, headers=headers)
 
     logger.info({
         'request_url': resp.url,

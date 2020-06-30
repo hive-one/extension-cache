@@ -24,7 +24,7 @@ def cache_data_save(key, data):
 
 def api_request(ids):
     query_params = '?include_followers=1&twitter_ids={array}'.format(array=json.dumps(ids).replace(' ', ''))
-    batch_req = requests.get('https://hive.one/api/v1/influencers/batch/' + query_params, headers=headers)
+    batch_req = requests.get('https://api.hive.one/api/v1/influencers/batch/' + query_params, headers=headers)
 
     return batch_req
 
@@ -49,7 +49,7 @@ def batch_request(ids):
 
 
 def get_all_hive_profiles():
-    available_resp = requests.get('https://hive.one/api/v1/influencers/', headers)
+    available_resp = requests.get('https://api.hive.one/api/v1/influencers/', headers)
     available_array = available_resp.json()['data']['available']
 
     available_chunks = [available_array[i:i + 20] for i in range(0, len(available_array), 20)]
